@@ -3,6 +3,7 @@ set -x
 dialog --checklist          'Choose the desired patches' 0 0 0 \
     fn-swap                 'Swap Fn and Ctrl keys' off \
     fix-ec-debug            'Allow hot-patching of EC.' on \
+    default-lcd-brightness  'Set default LCD backlight brightness behaviour' off \
     lcd-brightness          'Allow lowering LCD backlight brightness to 1%' on \
     lcd-backlight-925hz     'LCD backlight to 925Hz' off \
     true-battery-reading    'Fix battery reading above 70%' on \
