@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -x
 dialog --checklist          'Choose the desired patches' 0 0 0 \
     fix-ec-debug            'Allow hot-patching of EC.' on \
@@ -19,6 +19,11 @@ for p in $(cat selected); do
     if [ ! -e "$fn" ]; then
         echo "The patch \"$fn\" doesn't exist!"
         exit 1
+    fi
+    if [[ "$p" =~ .*fan-pwm-table$ ]]; then
+        set +x
+        echo -e "PWM TABLE:\n  in  out  pwm"; cat patches/$p.rapatch | cut -d" " -f2 | sed "s/\([0-9a-f][0-9a-f]\)/\1 /g" | awk '{ print sprintf("%4d", strtonum("0x" $1)), sprintf("%4d", strtonum("0x" $2)),  sprintf("%4d", strtonum("0x" $3)) }'
+        set -x
     fi
     r2 -w -q -P "$fn" ec.bin || true    # see https://github.com/radare/radare2/issues/15002
 done
