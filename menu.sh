@@ -1,15 +1,16 @@
 #!/bin/bash
 set -x
 dialog --checklist          'Choose the desired patches' 0 0 0 \
+    fn-swap                 'Swap Fn and Ctrl keys' off \
     fix-ec-debug            'Allow hot-patching of EC.' on \
     lcd-brightness          'Allow lowering LCD backlight brightness to 1%' on \
-    fn-swap                 'Swap Fn and Ctrl keys' off \
     lcd-backlight-925hz     'LCD backlight to 925Hz' off \
     true-battery-reading    'Fix battery reading above 70%' on \
     battery-current         'Fix battery current measurement' on \
     fast-charge             'Fast charge 6C and 9C batteries, and limit input power to 80W' off \
 	backlight-os-only       'EC only changes backlight by ACPI control' on \
     fix-fan                 'Patch fan similarly as is done with x210' off \
+    enable-hotkeys          'Generate scancodes for all hotkeys' off \
     default-fan-pwm-table   'Set default fan pwm table' off \
     silent-fan-pwm-table    'Set silent fan pwm table' off \
     silent2-fan-pwm-table   'Set silent 2 fan pwm table' off \
