@@ -10,8 +10,8 @@ dialog --checklist          'Choose the desired patches' 0 0 0 \
     fast-charge             'Fast charge 6C and 9C batteries, and limit input power to 80W' off \
 	backlight-os-only       'EC only changes backlight by ACPI control' on \
     fix-fan                 'Patch fan similarly as is done with x210' off \
-    enable-hotkeys          'Generate scancodes for known hotkeys' off \
-    enable-hotkey-f3        'Generate scancodes for F3 hotkey' off \
+    enable-hotkeys          'Generate scancodes for hotkeys' off \
+    enable-hotkey-f3        'Generate scancodes for F3 hotkey (interferes with built-in screen off)' off \
     default-fan-pwm-table   'Set default fan pwm table' off \
     silent-fan-pwm-table    'Set silent fan pwm table' off \
     silent2-fan-pwm-table   'Set silent 2 fan pwm table' off \
