@@ -16,7 +16,7 @@ dialog --checklist          'Choose the desired patches' 0 0 0 \
     default-fan-pwm-table   'Set default fan pwm table' off \
     silent-fan-pwm-table    'Set silent fan pwm table' off \
     silent2-fan-pwm-table   'Set silent 2 fan pwm table' off \
-    some-events             'Suspect to fix some issues with Enter, 7 and ThinkVantage (EXPERIMENTAL)' off \
+    fix-other-keys          'Fix some Blender issues with Enter, 7 and enable ThinkVantage button' off \
     2> selected
 for p in $(cat selected); do
     fn="patches/$p.rapatch"
