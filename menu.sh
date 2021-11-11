@@ -19,6 +19,7 @@ dialog --checklist          'Choose the desired patches' 0 0 0 \
     fix-other-keys          'Fix some Blender issues with Enter, 7 and enable ThinkVantage button' off \
     direct-fan-pwm-values   'Set direct fan values 5 and 15' off \
     remove-temperature-changed  'Remove temperature changed event' off \
+    remove-battery-spam     'Remove battery event spam (HIGHLY EXPERIMENTAL AND NOT TESTED), acpi_listen => battery PNP0C0A:03 00000080 00000001' off \
     2> selected
 for p in $(cat selected); do
     fn="patches/$p.rapatch"
