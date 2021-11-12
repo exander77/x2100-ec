@@ -8,9 +8,12 @@ dialog --checklist          'Choose the desired patches' 0 0 0 \
     lcd-backlight-925hz     'LCD backlight to 925Hz' off \
     true-battery-reading    'Fix battery reading above 70%' on \
     battery-current         'Fix battery current measurement' on \
-    fast-charge             'Fast charge 6C and 9C batteries, and limit input power to 80W' off \
 	backlight-os-only       'EC only changes backlight by ACPI control' on \
     fix-fan                 'Patch fan similarly as is done with x210' off \
+    fast-charge             'Fast  charge 6C (3A)   and 9C (4A)   batteries, and limit input power to 80W (65W adapters drop charging regularly)' off \
+    fast-charge2            'Fast  charge 6C (2.5A) and 9C (4A)   batteries, and limit input power to 80W' off \
+    fast-charge3            'Medum charge 6C (2A)   and 9C (2A)   batteries, and limit input power to 80W (does not drop charging Xiaomi 65W GaN USB-C)' off \
+    fast-charge4            'Slow  charge 6C (1.5A) and 9C (1.5A) batteries, and limit input power to 80W (does not drop charging for Xiaomi 65W GaN USB-C))' off \
     enable-hotkeys          'Generate scancodes for hotkeys' off \
     enable-hotkey-f3        'Generate scancodes for F3 hotkey (interferes with built-in screen off)' off \
     default-fan-pwm-table   'Set default fan pwm table' off \
