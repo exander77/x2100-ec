@@ -19,6 +19,7 @@ dialog --checklist          'Choose the desired patches' 0 0 0 \
     default-fan-pwm-table   'Set default fan pwm table' off \
     silent-fan-pwm-table    'Set silent fan pwm table' off \
     silent2-fan-pwm-table   'Set silent 2 fan pwm table' off \
+    silent3-fan-pwm-table   'Set silent 3 fan pwm table' off \
     direct-fan-pwm-values   'Set direct fan values 5 and 15' off \
     fix-other-keys          'Fix some Blender issues with Enter, 7 and enable ThinkVantage button' off \
     remove-temperature-changed  'Remove temperature changed event' off \
