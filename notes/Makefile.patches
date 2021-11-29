@@ -5,4 +5,7 @@
 	binutils/bin/cr16-unknown-elf-ld -o $@ $<
 
 %.dump: %.oo
-	binutils/bin/cr16-unknown-elf-objdump -wD $<
+	binutils/bin/cr16-unknown-elf-objdump -wD $< | tee $@
+
+%.rapatch: %.dump
+	lua mkpatch.lua > $@ < $<

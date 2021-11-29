@@ -8,6 +8,7 @@ dialog --checklist 'Choose the desired patches' 0 0 0 \
 	true-battery-reading	'Fix battery reading above 70%' on \
 	battery-current		'Fix battery current measurement' on \
 	fast-charge		'Fast charge 6C and 9C batteries, and limit input power to 80W' off \
+	backlight-os-only       'EC only changes backlight by ACPI control' on \
 	2> selected
 for p in $(cat selected); do
 	fn="patches/$p.rapatch"
