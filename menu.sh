@@ -11,6 +11,7 @@ dialog --checklist          'Choose the desired patches' 0 0 0 \
 	backlight-os-only       'EC only changes backlight by ACPI control' on \
     fix-fan                 'Patch fan similarly as is done with x210' off \
     fast-charge             'Fast  charge 6C (3A)   and 9C (4A)   batteries, and limit input power to 80W (65W adapters drop charging regularly)' off \
+    input-current-45w       'Input current 45W' off \
     input-current-65w       'Input current 65W' off \
     input-current-80w       'Input current 80W' off \
     enable-hotkeys          'Generate scancodes for hotkeys' off \
@@ -23,6 +24,7 @@ dialog --checklist          'Choose the desired patches' 0 0 0 \
     fix-other-keys          'Fix some Blender issues with Enter, 7 and enable ThinkVantage button' off \
     remove-temperature-changed  'Remove temperature changed event' off \
     remove-battery-spam     'Remove battery event spam, includes fix for batery reading above 70% (WORK IN PROGRESS, NOT FULL DONE)' off \
+    usb-c                   'USB-C charging check' off \
     2> selected
 for p in $(cat selected); do
     fn="patches/$p.rapatch"
