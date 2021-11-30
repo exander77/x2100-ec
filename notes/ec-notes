@@ -216,3 +216,114 @@ ev0_e looks harmless
 ev0_f is a noop
 
 FOUND IT by just disassembling chunks of code that I hadn't disassembled yet
+
+
+***
+remind me: how does the battery smbus query mechanism work, anyway?
+
+there is a state machine that looks up tables of BAT_REG_QUERYs.  this is
+stored in bat_query_ptrs (there are 4 of them).  set_bat_query_ptr puts one
+in an empty spot.  this is handled by the core state machine, SMBusRoutine;
+a bat_query_ptr is an array of operations.  here are the opcodes:
+
+  opcode 0x00:
+    set up parameters for this batquery.
+    
+    dest: contains a function pointer for a completion callback (see opc
+          0xff).
+    mode: SMBus number ("smbus_id").
+    bat_fun: I2C address on SMBus ("i2c_addr").
+  
+  opcode 0x01:
+    smb_query_battery_opc_c1(smbus_id, i2c_addr, THIS bat_fun, 1)
+    copies one byte into *THIS.dest later; seems to set up a 2-byte read
+  
+  opcode 0x02:
+    write 8 bits: smbus_id.i2c_addr[THIS.bat_fun] = (uint8_t) THIS.mode
+
+  opcode 0x03:
+    read 16 bits: *THIS.dest = (uint16_t) smbus_id.i2c_addr[THIS.bat_fun]
+    
+    note that the "mode" flag on this can be set to 1 for absolute value
+    mode; this does not seem to work right
+
+  opcode 0x04:
+    write 16 bits: (uint16_t) smbus_id.i2c_addr[THIS.bat_fun) = *(uint16_t *)THIS.dest
+
+  opcode 0xff:
+    call completion callback.  if completion callback returns zero, keep
+    this batquery around and run it again later; otherwise, do not repeat
+    it.
+
+what does usbc_smbus_query do?
+
+  opc 0x00(smbus_id = 1, i2c_addr = 0x70, callback = usbc_smbus_callback)
+  (batquery_m5 + 5)(mode = mode, fun = batquery_fun, dest = destptr)
+  0xFF
+
+so batquery_m5 table:
+  0xF0: set 0x1010F
+  0xF1: clear 0x1010F
+  0xF2: do something with TUSB546?
+  0xF4: disable charging
+  0xF5: enable charging
+  0xF6: set fan PWM
+  0xF7: unknown 2368c
+  0xF8: unknown 230a6
+  0xF9: write value to 0x1012c
+  0xFA: set charger current and voltage
+  0xFB: opc0, invalid
+  0xFC: opc_c1
+  0xFD: write 8
+  0xFE: read 16
+  0xFF: write 16
+
+this is called from usbc_trigger_smbus_query -- what calls that?  very... 
+complicated...  stuff
+
+consider also: charge_configure_fully_query
+  opc 0x00(smbus_id = 1, i2c_addr = 0x12, callback = return 0xFF)
+  opc 0x04(bat_fun = 0x12, data = ChargeOption)
+  opc 0x04(bat_fun = 0x14, data = ChargeCurrent)
+  opc 0x04(bat_fun = 0x15, data = ChargeVoltage)
+  opc 0xFF
+
+consider also: bat_prop_queries
+  opc 0x00(smbus_id = 0, i2c_addr = 0x16, callback = ...)
+  opc 0x03(bat_fun = 0x10, mode = 0x0, dest = ecreg62_fullcap)
+  ...
+
+PROBLEM: there is no opcode to read >16 bits.  that means we can read only
+the first 2 bytes of the Parameter, whichever that be.  so we need to patch
+the smbusroutine, really.
+
+known things about a smb_buf: a smb_buf has:
+
+  a unkcmd, an txlen, a smbus_addr, a smbus_opc (that's an i2c addr)
+  
+  to write 16:
+    unkcmd = 0x42
+    txlen  = 4
+    addr   = i2caddr
+    opc    = regaddr
+    data[...] = data[...]
+  
+  to read 16:
+    unkcmd = 0xc2
+    txlen  = 2
+    addr   = addr
+    opc    = regaddr
+  
+  to write 8:
+    unkcmd = 0x41
+    txlen  = 3
+    addr   = addr
+    opc    = opc
+    data[0]= data[0]
+  
+  unknown thing c1:
+    unkcmd = 0xc1
+    txlen  = 2
+    addr   = addr
+    opc    = opc
+    presumably 'read 8'?
