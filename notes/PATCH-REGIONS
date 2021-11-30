@@ -1,0 +1,5 @@
+SECTION START  END    OWNER
+.data   10b00  10b01  battery-current:bat_rate_temp_buf
+.rodata 2c900  2c928  battery-current:smbus query table
+.text   2c930  2c970  fast-charge
+.text   2c970  2c990  battery-current:absolute value patch
