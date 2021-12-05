@@ -327,3 +327,5 @@ known things about a smb_buf: a smb_buf has:
     addr   = addr
     opc    = opc
     presumably 'read 8'?
+
+NEW CMD: opc 0x80 = read 16b
