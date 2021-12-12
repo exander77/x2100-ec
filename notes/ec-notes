@@ -329,3 +329,39 @@ known things about a smb_buf: a smb_buf has:
     presumably 'read 8'?
 
 NEW CMD: opc 0x80 = read 16b
+
+
+*** NOTES ON ATOMIC PATCHLOADER:
+
+we need a mechanism to SAFELY trigger things in the EC.  we will use
+process_ec_cmd_81_sub for this.
+
+we will use opcode 0xFC 0x00 to trigger a jump, and opcode 0xFC 0x01 to
+trigger a patchload.
+
+to trigger a jump:
+
+  write the jump address to 0x10c00 RIGHT SHIFTED BY ONE (try: 0x2d04e == 0x16827 -> 27680100)
+  opcode 0xFC 0x00
+
+try:
+  load the patchloader...
+  # dd if=/sys/kernel/debug/ec/ec0/ram bs=1 skip=$[0x10c04] count=1 2>/dev/null | hexdump -C
+  # echo 27680100 | xxd -r -p | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$[0x10c00] 2>/dev/null
+  # echo -en '\x00' > /sys/kernel/debug/ec/ec0/xop
+  # dd if=/sys/kernel/debug/ec/ec0/ram bs=1 skip=$[0x10c04] count=1 2>/dev/null | hexdump -C 
+  it should have incremented
+   
+to trigger a patch load:
+  write a sequence of packets to 0x2e000, of form:
+    AA AA AA AA BB .......
+    where AAAAAAAA is an address, and BB is a byte count
+    end with a byte count of 0
+  opcode 0xFC 0x01
+  
+try:
+  # dd if=/sys/kernel/debug/ec/ec0/ram bs=1 skip=$[0x2f000] count=4 2>/dev/null | hexdump -C
+  # echo '00f0020004aabbccdd0000000000' | xxd -r -p | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$[0x2e000] 2>/dev/null
+  # echo -en '\x01' > /sys/kernel/debug/ec/ec0/xop
+  # dd if=/sys/kernel/debug/ec/ec0/ram bs=1 skip=$[0x2f000] count=4 2>/dev/null | hexdump -C
+   
