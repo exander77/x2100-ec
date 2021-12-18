@@ -1,5 +1,11 @@
 SECTION START  END    OWNER
 .data   10b00  10b01  battery-current:bat_rate_temp_buf
+.data   10b02  10b11  usbc-charge-negotiation:i2c_response_buf
+.data   10b12  10b12  usbc-charge-negotiation:opc80_done
+.data   10c00  10c04  atomic-patchloader pointer
 .rodata 2c900  2c928  battery-current:smbus query table
 .text   2c930  2c970  fast-charge
 .text   2c970  2c990  battery-current:absolute value patch
+.text   2c9a0         usbc-charge-negotiation
+.text   2d000  2d058  atomic-patchloader
+.text   2e000  2f000  atomic-patchloader data buf

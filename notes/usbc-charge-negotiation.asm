@@ -26,11 +26,17 @@ bat_query_opc0_i2c_addr:
 smb_bufs:
 
 # Variables defined by me.
-.org 0x10b00 - 2
-bat_rate_temp_buf:
+.org 0x10b02 - 2
+smbus_i2c_response_buf:
+
+.org 0x10b12 - 2
+smbus_opc80_done:
 
 .org 0x21558 - 2
 smb_get_rxdata_ptr:
+
+.org 0x2380c - 2
+set_bat_query_ptr:
 
 # Patch SMBusRoutine to support a new opcode, 0x80, which does a 16-byte
 # read.
@@ -55,6 +61,7 @@ SMBusRoutine_patch_ret:
 
 .org 0x2535a - 2
 smb_trans:
+
 
 .org 0x2c9a0 - 2
 # Add a custom opcode, 0x80, which does a 16-byte read
@@ -143,4 +150,57 @@ SMBusRoutine_patch_checkcmd:
 	BR SMBusRoutine_patch_checkcmd_ret@m
 
 SMBusRoutine_patch_checkcmd_opc80:
-	# ...	
+	# can trash r1r0, r5r4
+	MOVD $smbus_i2c_response_buf, (r5, r4)
+	LOADW *0x0(r3, r2), r0
+	STORW r0, *0x0(r5, r4)
+	LOADW *0x2(r3, r2), r0
+	STORW r0, *0x2(r5, r4)
+	LOADW *0x4(r3, r2), r0
+	STORW r0, *0x4(r5, r4)
+	LOADW *0x6(r3, r2), r0
+	STORW r0, *0x6(r5, r4)
+	LOADW *0x8(r3, r2), r0
+	STORW r0, *0x8(r5, r4)
+	LOADW *0xa(r3, r2), r0
+	STORW r0, *0xa(r5, r4)
+	LOADW *0xc(r3, r2), r0
+	STORW r0, *0xc(r5, r4)
+	LOADW *0xe(r3, r2), r0
+	STORW r0, *0xe(r5, r4)
+	MOVD $smbus_opc80_done, (r5, r4)
+	LOADB *0x0(r5, r4), r0
+	ADDB $1, r0
+	STORB r0, *0x0(r5, r4)
+
+	BR SMBusRoutine_patch_checkcmd_ret@m
+
+# Set up a read from i2c_addr = 0x70, smbus_id = 1, register 0x04 (should
+# return 'I2C '.
+TPS65987D_smbus_query:
+	.byte 0x70 # i2c_addr
+	.byte 0x00 # opcode SETUP
+	.byte 0x01, 0x00 # SMBUS ID 1
+	.long TPS65987D_smbus_callback@c
+	
+	.byte 0x04 # register 0x04
+	.byte 0x80 # new opcode
+	.byte 0x00, 0x00
+	.long smbus_i2c_response_buf
+	
+	.byte 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 # done
+
+TPS65987D_smbus_callback:
+	MOVD $smbus_opc80_done, (r3, r2)
+	LOADB *0x0(r3, r2), r0
+	ADDB $1, r0
+	STORB r0, *0x0(r3, r2)
+	movw $0xff, r0
+	jump (ra)
+
+TPS65987D_call:
+	PUSH $0x3, r7, ra
+	MOVD $TPS65987D_smbus_query, (r3, r2)
+	BAL (ra), *set_bat_query_ptr
+	POPRET $0x3, r7, ra
+	
