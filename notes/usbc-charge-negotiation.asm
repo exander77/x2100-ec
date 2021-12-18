@@ -96,8 +96,7 @@ SMBusRoutine_patch_opc_80:
 	bal (ra), *smb_query_read_16byte
 
 	MOVD $smbus_opc80_done, (r3, r2)
-	LOADB *0x0(r3, r2), r0
-	ORB $1, r0
+	MOVB $1, r0
 	STORB r0, *0x0(r3, r2)
 
 	storb $0x1, *smbus_waiting_completion
@@ -194,8 +193,13 @@ TPS65987D_smbus_query:
 	.byte 0x01, 0x00 # SMBUS ID 1
 	.long TPS65987D_smbus_callback@c
 	
+#	.byte 0x04 # register 0x04
+#	.byte 0x80 # new opcode
+#	.byte 0x00, 0x00
+#	.long smbus_i2c_response_buf
+
 	.byte 0x04 # register 0x04
-	.byte 0x80 # new opcode
+	.byte 0x03 # read16
 	.byte 0x00, 0x00
 	.long smbus_i2c_response_buf
 	
@@ -208,8 +212,9 @@ TPS65987D_smbus_callback:
 
 	# We succeeded, I think?
 	MOVD $smbus_opc80_done, (r3, r2)
-	LOADB *0x0(r3, r2), r0
-	ORB $4, r0
+#	LOADB *0x0(r3, r2), r0
+	movw $0x8, r0
+#	ORB $4, r0
 	STORB r0, *0x0(r3, r2)
 
 	movw $0xff, r0
