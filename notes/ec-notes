@@ -378,3 +378,23 @@ echo d0640100 | xxd -r -p | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$[0x10c
 echo -en '\x00' > /sys/kernel/debug/ec/ec0/xop
 sleep 3
 dd if=/sys/kernel/debug/ec/ec0/ram bs=1 skip=$[0x00010b02] count=24 2>/dev/null | hexdump -C   
+
+*** NOTES ON SCANNING THE I2C BUS:
+
+smbus_id = 0 has things on address:
+  16 (battery)
+  
+smbus_id = 1 has things on addresses:
+  12 (battery charger)
+  50 (???)
+    does not behave like a USBC controller; seems to have a memory that is 00 00 00 00 ad ad ad ad ad ad ad ad...
+  8c (???)
+    does not behave like a USBC controller; seems to have other registers
+    00 = 851423110100f0008000000702000000
+    01 = 0000dc00000000000080000000200218
+    02 = f2e4ff00ff0300000000000000000000
+
+smbus_id = 2 has no I2C peripherals
+smbus_id = 3 has no I2C peripherals
+
+at some point in this process I confused the EC and locked up the i2c engine...
