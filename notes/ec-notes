@@ -364,4 +364,17 @@ try:
   # echo '00f0020004aabbccdd0000000000' | xxd -r -p | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$[0x2e000] 2>/dev/null
   # echo -en '\x01' > /sys/kernel/debug/ec/ec0/xop
   # dd if=/sys/kernel/debug/ec/ec0/ram bs=1 skip=$[0x2f000] count=4 2>/dev/null | hexdump -C
-   
+
+
+*** NOTES ON USBC CHARGE NEGOTIATION:
+
+to try to trigger the read -- build it and then run the atomic patchloader
+
+then:
+
+dd if=/sys/kernel/debug/ec/ec0/ram bs=1 skip=$[0x00010b02] count=24 2>/dev/null | hexdump -C
+echo -en '\x00' | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$[0x10b12] 2>/dev/null
+echo d0640100 | xxd -r -p | dd of=/sys/kernel/debug/ec/ec0/ram bs=1 seek=$[0x10c00] 2>/dev/null
+echo -en '\x00' > /sys/kernel/debug/ec/ec0/xop
+sleep 3
+dd if=/sys/kernel/debug/ec/ec0/ram bs=1 skip=$[0x00010b02] count=24 2>/dev/null | hexdump -C   

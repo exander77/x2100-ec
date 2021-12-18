@@ -188,7 +188,7 @@ SMBusRoutine_patch_checkcmd_opc80:
 # Set up a read from i2c_addr = 0x70, smbus_id = 1, register 0x04 (should
 # return 'I2C '.
 TPS65987D_smbus_query:
-	.byte 0x70 # i2c_addr
+	.byte 0x12 # i2c_addr
 	.byte 0x00 # opcode SETUP
 	.byte 0x01, 0x00 # SMBUS ID 1
 	.long TPS65987D_smbus_callback@c
