@@ -64,6 +64,12 @@ smb_trans:
 
 
 .org 0x2c9a0 - 2
+TPS65987D_call:
+	PUSH $0x3, r7, ra
+	MOVD $TPS65987D_smbus_query, (r3, r2)
+	BAL (ra), *set_bat_query_ptr
+	POPRET $0x3, r7, ra
+
 # Add a custom opcode, 0x80, which does a 16-byte read
 SMBusRoutine_patch_issuecmd:
 	CMPW $0x80, r0
@@ -88,7 +94,12 @@ SMBusRoutine_patch_opc_80:
 	MOVB $0x1, r5 # int_en
 	
 	bal (ra), *smb_query_read_16byte
-	
+
+	MOVD $smbus_opc80_done, (r3, r2)
+	LOADB *0x0(r3, r2), r0
+	ORB $1, r0
+	STORB r0, *0x0(r3, r2)
+
 	storb $0x1, *smbus_waiting_completion
 	
 	BR SMBusRoutine_patch_ret@l
@@ -170,7 +181,7 @@ SMBusRoutine_patch_checkcmd_opc80:
 	STORW r0, *0xe(r5, r4)
 	MOVD $smbus_opc80_done, (r5, r4)
 	LOADB *0x0(r5, r4), r0
-	ADDB $1, r0
+	ORB $2, r0
 	STORB r0, *0x0(r5, r4)
 
 	BR SMBusRoutine_patch_checkcmd_ret@m
@@ -191,16 +202,20 @@ TPS65987D_smbus_query:
 	.byte 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 # done
 
 TPS65987D_smbus_callback:
+	loadb *0x0(r3, r2), r0
+	cmpb $-1, r0
+	beq 1f
+
+	# We succeeded, I think?
 	MOVD $smbus_opc80_done, (r3, r2)
 	LOADB *0x0(r3, r2), r0
-	ADDB $1, r0
+	ORB $4, r0
 	STORB r0, *0x0(r3, r2)
+
 	movw $0xff, r0
 	jump (ra)
-
-TPS65987D_call:
-	PUSH $0x3, r7, ra
-	MOVD $TPS65987D_smbus_query, (r3, r2)
-	BAL (ra), *set_bat_query_ptr
-	POPRET $0x3, r7, ra
-	
+1:
+	# Failure!
+	STORB r0, *smbus_opc80_done
+	movw $0xff, r0
+	jump (ra)
