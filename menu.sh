@@ -8,7 +8,7 @@ dialog --checklist          'Choose the desired patches' 0 0 0 \
     lcd-backlight-925hz     'LCD backlight to 925Hz' off \
     true-battery-reading    'Fix battery reading above 70%' on \
     battery-current         'Fix battery current measurement' on \
-	backlight-os-only       'EC only changes backlight by ACPI control' on \
+    backlight-os-only       'EC only changes backlight by ACPI control (see ./acpi for /etc/acpi configuration)' on \
     fast-charge             'Fast  charge 6C (3A)   and 9C (4A)   batteries, and limit input power to 80W (65W adapters drop charging regularly)' off \
     input-current-45w       'Input current 45W' off \
     input-current-65w       'Input current 65W' off \
