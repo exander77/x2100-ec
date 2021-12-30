@@ -39,7 +39,7 @@ patch:
     LOADB *chargesm_output_15b, r1
     CMPB $0, r1
     BEQ no_battery@s
-    ADDB $2, r0
+    ORB $2, r0
 no_battery:
     LOADB *state_prev, r1
     CMPB r1, r0
