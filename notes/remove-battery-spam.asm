@@ -4,16 +4,10 @@ _start:
 .byte 0
 
 # Standard variables from the EC.
-.org 0x10084 - 2
-charging_state:
 .org 0x10085 - 2
 state_prev:
-.org 0x10124 - 2
-acpi_6a_present_rate:
-.org 0x10159 - 2
-charger_is_configured: #0 no charger
-.org 0x1015b - 2
-chargesm_output_15b: #0 no battery
+.org 0x10089 - 2
+repeat_counter:
 
 .org 0x233e8 - 2
 change:
@@ -35,15 +29,26 @@ acpi_report:
 
 .org 0x2c990 -2
 patch:
-    LOADB *charger_is_configured, r0
-    LOADB *chargesm_output_15b, r1
-    CMPB $0, r1
-    BEQ no_battery@s
-    ORB $2, r0
-no_battery:
+    # is not 0x1113 go check it
+    CMPW $0x1113, r2
+    BNE check@s
+    MOVW $0x0, r0
+    BR nocheck@s    
+check: # checks repeat counter
+    # repeat_counter is > 0, send event, decrease repeat_counter
+    LOADB *repeat_counter, r4
+    CMPB $0x0, r4
+    BEQ check2@s
+    SUBB $0x1, r4
+    STORB r4, *repeat_counter
+    BR nocheck@s
+check2: # checks previous state
+    # real check passed, set repeat_counter = 1 (possibly increase if issues)
     LOADB *state_prev, r1
     CMPB r1, r0
     BEQ done@s
+    STORB $0x1, *repeat_counter
+nocheck:
     STORB r0, *state_prev
     BAL (ra), *acpi_report
 done:
