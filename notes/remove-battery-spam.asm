@@ -7,7 +7,13 @@ _start:
 .org 0x10084 - 2
 charging_state:
 .org 0x10085 - 2
-charging_state_prev:
+state_prev:
+.org 0x10124 - 2
+acpi_6a_present_rate:
+.org 0x10159 - 2
+charger_is_configured: #0 no charger
+.org 0x1015b - 2
+chargesm_output_15b: #0 no battery
 
 .org 0x233e8 - 2
 change:
@@ -29,12 +35,16 @@ acpi_report:
 
 .org 0x2c990 -2
 patch:
-#   POPRET $0x2, r7, ra
-#   LOADB *charging_state, r0
-    LOADB *charging_state_prev, r1
+    LOADB *charger_is_configured, r0
+    LOADB *chargesm_output_15b, r1
+    CMPB $0, r1
+    BEQ no_battery@s
+    ADDB $2, r0
+no_battery:
+    LOADB *state_prev, r1
     CMPB r1, r0
     BEQ done@s
-    STORB r0, *charging_state_prev
+    STORB r0, *state_prev
     BAL (ra), *acpi_report
 done:
     BAL (ra), *fce

@@ -23,7 +23,7 @@ dialog --checklist          'Choose the desired patches' 0 0 0 \
     direct-fan-pwm-values   'Set direct fan values 5 and 15' off \
     fix-other-keys          'Fix some Blender issues with Enter, 7 and enable ThinkVantage button' off \
     remove-temperature-changed  'Remove temperature changed event' off \
-    remove-battery-spam     'Remove battery event spam, includes fix for batery reading above 70% (WORK IN PROGRESS, NOT FULL DONE)' off \
+    remove-battery-spam     'Remove battery ACPI event spam' off \
     usb-c                   'USB-C charging check' off \
     2> selected
 for p in $(cat selected); do
