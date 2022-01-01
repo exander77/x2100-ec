@@ -25,7 +25,7 @@ dialog --checklist          'Choose the desired patches' 0 0 0 \
     remove-temperature-changed  'Remove temperature changed event' off \
     remove-battery-spam     'Remove battery ACPI event spam' off \
     usb-c                   'USB-C charging check' off \
-    vlad00                  'Unknown vladisslav2021 patch port' off \
+    vlad00                  'Unknown vladisslav2021 patch port (most likely fix to swap Fn/Ctrl and Ctrl+Wheel functionality' off \
     2> selected
 for p in $(cat selected); do
     fn="patches/$p.rapatch"
