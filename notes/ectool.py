@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import argparse
+
 class EC:
     def __init__(self):
         self.mem = open("/sys/kernel/debug/ec/ec0/ram", "r+b", 0)
@@ -11,7 +13,7 @@ class EC:
 
     def write(self, addr, data):
         self.mem.seek(addr)
-        return self.mem.write(data)
+        self.mem.write(data)
 
     def read8(self, addr):
         return self.read(addr, nbytes = 1)[0] | 0
@@ -23,15 +25,25 @@ class EC:
     def read32(self, addr):
         d = self.read(addr, nbytes = 4)
         return d[0] | (d[1] << 8) | (d[2] << 16) | (d[3] << 24)
+    
+    def write8(self, addr, data):
+        self.write(addr, bytes([data]))
 
 class Reg:
     def __init__(self, name, adr, fields = []):
         self.name = name
         self.adr = adr
-        self.fields = fields
+        self.ordfields = fields
+        self.fields = { f.name: f for f in self.ordfields }
     
     def module(self, name, base):
-        return Reg(name + "_" + self.name, self.adr + base, self.fields)
+        return Reg(name + "_" + self.name, self.adr + base, self.ordfields)
+    
+    def print(self, val, fields = True):
+        print(f"0x{self.adr:06x} ({self.name:12s}): 0x{val:02x}")
+        if fields:
+            for field in self.ordfields:
+                field.print(self.name, val)
 
 class Field:
     def __init__(self, name, lo, size):
@@ -39,6 +51,9 @@ class Field:
         self.lo = lo
         self.size = size
         self.hi = lo + size - 1
+    
+    def print(self, regname, regval):
+        print(f"          {regname + '.' + self.name:20s} ([{self.hi}:{self.lo}]) = {(regval >> self.hi) & ((1 << self.size) - 1)}")
 
 # sed -e "s/\#define [^_]*_\([^ ]*\) *\(.\), *\(.\)/            Field('\1', \2, \3),/" < npce9mnx_regs.h
 
@@ -265,7 +280,7 @@ class NPCE9MNX(EC):
     def __init__(self):
         super().__init__()
         
-        self.modules = [
+        self.modulelist = [
             ('CHIP_CFG', self.CHIP_CFG_REGS),
             *[(f"ITIM8_{n}", [reg.module(f"ITIM8_{n}", self.ITIM8_BASE + n * self.ITIM8_OFS) for reg in self.ITIM8_REGS])
               for n in range(self.ITIM8_COUNT)],
@@ -275,24 +290,63 @@ class NPCE9MNX(EC):
               for n in range(self.SMB_COUNT)],
         ]
         
-    def dump_chip_cfg(self):
-        for reg in self.CHIP_CFG_REGS:
+        self.modules = { m[0]: m[1] for m in self.modulelist }
+        self.regs = {r.name: r for r in sum([m[1] for m in self.modulelist], [])}
+    
+    def dump_module(self, module):
+        for reg in self.modules[module]:
             val = self.read8(reg.adr)
-            print(f"0x{reg.adr:06x} ({reg.name:12s}): 0x{val:02x}")
-            for field in reg.fields:
-                print(f"          {reg.name + '.' + field.name:20s} ([{field.hi}:{field.lo}]) = {(val >> field.hi) & ((1 << field.size) - 1)}")
-    
-    def dump_all(self):
-        for (module,regs) in self.modules:
-            print("----------")
-            print(module)
-            print("----------")
-            for reg in regs:
-                val = self.read8(reg.adr)
-                print(f"0x{reg.adr:06x} ({reg.name:12s}): 0x{val:02x}")
-                for field in reg.fields:
-                    print(f"          {reg.name + '.' + field.name:20s} ([{field.hi}:{field.lo}]) = {(val >> field.hi) & ((1 << field.size) - 1)}")
-            print("")
-    
+            reg.print(val)
+
+did_something = False
 ec = NPCE9MNX()
-ec.dump_all()
+
+parser = argparse.ArgumentParser(description='Interact with an X2100 EC.')
+def mkaction(*args, func = None, **kwargs):
+    class CallableAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string = None):
+            func(values)
+    parser.add_argument(action = CallableAction, *args, **kwargs)
+
+def dump_all(args):
+    for (module,regs) in ec.modulelist:
+        print("----------")
+        print(module)
+        print("----------")
+        ec.dump_module(module)
+    global did_something
+    did_something = True
+mkaction('--dump-all', help = 'Dump all registers.', nargs = 0, func = dump_all)
+
+def dump_gpios(args):
+    for gpio in range(ec.GPIO_COUNT):
+        ec.dump_module(f"GPIO{gpio:X}")
+    global did_something
+    did_something = True
+mkaction('--dump-gpios', help = 'Dump all GPIO registers.', nargs = 0, func = dump_gpios)
+
+def dump_module(args):
+    for module in args:
+        ec.dump_module(module)
+        global did_something
+        did_something = True
+mkaction('--dump-module', help = 'Dump one module.', metavar = "MODULE", nargs = 1, func = dump_module)
+
+def dump_register(args):
+    for reg in args:
+        nreg = ec.regs[reg]
+        nreg.print(ec.read8(nreg.adr))
+        global did_something
+        did_something = True
+mkaction('--dump-register', help = 'Dump one register.', metavar = "REGISTER", nargs = 1, func = dump_register)
+
+def write_register(args):
+    reg = args[0]
+    da = int(args[1], 16)
+    print(f"0x{ec.regs[reg].adr:06x} ({reg:12s}) <- 0x{da:02x}")
+    ec.write8(ec.regs[reg].adr, da)
+mkaction('--write-register', help = 'Write a value to a register. (BE CAREFUL!)', nargs = 2, metavar=("REGISTER", "HEX_VALUE"), func = write_register)
+args = parser.parse_args()
+
+if not did_something:
+    parser.print_help()
