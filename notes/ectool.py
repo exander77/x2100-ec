@@ -29,6 +29,9 @@ class Reg:
         self.name = name
         self.adr = adr
         self.fields = fields
+    
+    def module(self, name, base):
+        return Reg(name + "_" + self.name, self.adr + base, self.fields)
 
 class Field:
     def __init__(self, name, lo, size):
@@ -216,15 +219,63 @@ class NPCE9MNX(EC):
             Field('JTD', 4, 1)])
     ]
     
+    ITIM8_REGS = [
+        Reg('ITCNT', 0),
+        Reg('ITPRE', 1),
+        Reg('ITCNT16L', 2),
+        Reg('ITCNT16H', 3),
+        Reg('ITCTS', 4, [
+            Field('TO_STS', 0, 1),
+            Field('TO_IE', 2, 1),
+            Field('TO_WUE', 3, 1),
+            Field('CKSEL', 4, 1), # 0 = 50MHz, 1 = 32 kHz
+            Field('ITEN', 7, 1)])]
+    ITIM8_COUNT = 3
+    ITIM8_BASE = 0xFFF700
+    ITIM8_OFS = 0x10
+    
+    GPIO_REGS = [
+        Reg('DOUT', 0),
+        Reg('DIN', 1),
+        Reg('DIR', 2),
+        Reg('PULL', 3),
+        Reg('PUD', 4),
+        Reg('ENVDD', 5),
+        Reg('OTYPE', 6)
+    ]
+    GPIO_COUNT = 16
+    GPIO_BASE = 0xFFF200
+    GPIO_OFS = 0x10
+    
     def __init__(self):
         super().__init__()
-    
+        
+        self.modules = [
+            ('CHIP_CFG', self.CHIP_CFG_REGS),
+            *[(f"ITIM8_{n}", [reg.module(f"ITIM8_{n}", self.ITIM8_BASE + n * self.ITIM8_OFS) for reg in self.ITIM8_REGS])
+              for n in range(self.ITIM8_COUNT)],
+            *[(f"GPIO{n:X}", [reg.module(f"GPIO{n:X}", self.GPIO_BASE + n * self.GPIO_OFS) for reg in self.GPIO_REGS])
+              for n in range(self.GPIO_COUNT)]
+        ]
+        
     def dump_chip_cfg(self):
         for reg in self.CHIP_CFG_REGS:
             val = self.read8(reg.adr)
             print(f"0x{reg.adr:06x} ({reg.name:12s}): 0x{val:02x}")
             for field in reg.fields:
                 print(f"          {reg.name + '.' + field.name:20s} ([{field.hi}:{field.lo}]) = {(val >> field.hi) & ((1 << field.size) - 1)}")
-        
+    
+    def dump_all(self):
+        for (module,regs) in self.modules:
+            print("----------")
+            print(module)
+            print("----------")
+            for reg in regs:
+                val = self.read8(reg.adr)
+                print(f"0x{reg.adr:06x} ({reg.name:12s}): 0x{val:02x}")
+                for field in reg.fields:
+                    print(f"          {reg.name + '.' + field.name:20s} ([{field.hi}:{field.lo}]) = {(val >> field.hi) & ((1 << field.size) - 1)}")
+            print("")
+    
 ec = NPCE9MNX()
-ec.dump_chip_cfg()
+ec.dump_all()
