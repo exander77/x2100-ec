@@ -17,15 +17,16 @@ dialog --checklist          'Choose the desired patches' 0 0 0 \
     enable-hotkeys          'Generate scancodes for hotkeys' off \
     enable-hotkey-f3        'Generate scancodes for F3 hotkey (interferes with built-in screen off)' off \
     default-fan-pwm-table   'Set default fan pwm table' off \
+    direct-fan-pwm-values   'Set direct fan values 5 and 15' off \
     silent-fan-pwm-table    'Set silent fan pwm table' off \
     silent2-fan-pwm-table   'Set silent 2 fan pwm table' off \
     silent3-fan-pwm-table   'Set silent 3 fan pwm table' off \
-    direct-fan-pwm-values   'Set direct fan values 5 and 15' off \
     fix-other-keys          'Fix some Blender issues with Enter, 7 and enable ThinkVantage button' off \
     remove-temperature-changed  'Remove temperature changed event' off \
     remove-battery-spam     'Remove battery ACPI event spam' off \
     usb-c                   'USB-C charging check' off \
     vlad00                  'Unknown vladisslav2021 patch port (most likely fix to swap Fn/Ctrl and Ctrl+Wheel functionality' off \
+    brightness              'Brightness' off \
     2> selected
 for p in $(cat selected); do
     fn="patches/$p.rapatch"
