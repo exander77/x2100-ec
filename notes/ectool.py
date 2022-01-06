@@ -247,6 +247,21 @@ class NPCE9MNX(EC):
     GPIO_BASE = 0xFFF200
     GPIO_OFS = 0x10
     
+    SMB_REGS = [
+        Reg('SDA', 0),
+        Reg('ST', 2),
+        Reg('CST', 4),
+        Reg('CTL1', 6),
+        Reg('ADDR1', 8),
+        Reg('CTL2', 10),
+        Reg('ADDR2', 12),
+        Reg('CTL3', 14),
+        Reg('VER', 31)
+    ]
+    SMB_COUNT = 5
+    SMB_BASE = 0xFFF500
+    SMB_OFS = 0x40
+    
     def __init__(self):
         super().__init__()
         
@@ -255,7 +270,9 @@ class NPCE9MNX(EC):
             *[(f"ITIM8_{n}", [reg.module(f"ITIM8_{n}", self.ITIM8_BASE + n * self.ITIM8_OFS) for reg in self.ITIM8_REGS])
               for n in range(self.ITIM8_COUNT)],
             *[(f"GPIO{n:X}", [reg.module(f"GPIO{n:X}", self.GPIO_BASE + n * self.GPIO_OFS) for reg in self.GPIO_REGS])
-              for n in range(self.GPIO_COUNT)]
+              for n in range(self.GPIO_COUNT)],
+            *[(f"SMB{n:X}", [reg.module(f"SMB{n:X}", self.SMB_BASE + n * self.SMB_OFS) for reg in self.SMB_REGS])
+              for n in range(self.SMB_COUNT)],
         ]
         
     def dump_chip_cfg(self):
