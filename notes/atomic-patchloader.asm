@@ -1,3 +1,11 @@
+.macro LOAD_BEGIN
+LOAD_BEGIN_\@:
+.endm
+
+.macro LOAD_END
+LOAD_END_\@:
+.endm
+
 .global _start
 _start:
 .org 0x10000
@@ -33,8 +41,10 @@ jmp_buf:
 didexec:
 
 .org 0x20ffa - 2
+LOAD_BEGIN
 ec_cmd_81_patch_cmp_fb_src:
 	BR ec_cmd_81_patch_cmp_fb@m
+LOAD_END
 
 .org 0x21022 - 2
 ec_cmd_81_handle_fb:
@@ -43,6 +53,7 @@ ec_cmd_81_handle_fb:
 ec_cmd_81_ret:
 
 .org 0x2d000 - 2
+LOAD_BEGIN
 ec_cmd_81_patch_cmp_fb:
 	CMPW $0xfb, r2
 	BEQ ec_cmd_81_handle_fb
@@ -88,9 +99,13 @@ safetarget:
 	STORB r0, *0x0(r3, r2)
 	JUMP (ra)
 
+LOAD_END
+
 # Variable from me.
 .org 0x2e000 - 2
+LOAD_BEGIN
 patchloader_buf:
 	.byte 0, 0, 0, 0, 0
+LOAD_END
 # Patchbuffer format: 4byte address, 1b length, [length] bytes, then a zero
 # length to terminate

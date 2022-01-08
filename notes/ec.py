@@ -25,6 +25,27 @@ class EC:
     def write8(self, addr, data):
         self.write(addr, bytes([data]))
 
+    def do_xop(self, xop):
+        self.xop.seek(0)
+        self.xop.write(bytes([xop]))
+    
+    def _verify_patchloader(self):
+        for bn,b in enumerate(self.ATOMIC_PATCH_CHECK[1]):
+            rd = self.read8(self.ATOMIC_PATCH_CHECK[0] + bn)
+            if rd != b:
+                raise RuntimeError(f"atomic patchloader verification failed at address 0x{self.ATOMIC_PATCH_CHECK[0] + bn:x} (read back 0x{rd:02x}, expected 0x{b:02x}) ... is the patchloader loaded?")
+    
+    def atomicpatch(self, data):
+        self._verify_patchloader()
+        self.write(self.ATOMIC_PATCH_BASE, data)
+        self.do_xop(1)
+
+    def call(self, addr):
+        self._verify_patchloader()
+        addr = addr >> 1
+        self.write(self.JUMP_TARGET_PTR, bytes([addr & 0xFF, (addr >> 8) & 0xFF, (addr >> 16) & 0xFF, (addr >> 24) & 0xFF]))
+        self.do_xop(0)
+
 class Reg:
     def __init__(self, name, adr, fields = []):
         self.name = name
@@ -54,6 +75,10 @@ class Field:
 # sed -e "s/\#define [^_]*_\([^ ]*\) *\(.\), *\(.\)/            Field('\1', \2, \3),/" < npce9mnx_regs.h
 
 class NPCE9MNX(EC):
+    ATOMIC_PATCH_BASE = 0x2E000
+    JUMP_TARGET_PTR = 0x10C00
+    ATOMIC_PATCH_CHECK = (0x20FFA, [0xE0, 0x18, 0x06, 0xC0])
+
     CHIP_CFG_BASE = 0xFFF000
     CHIP_CFG_REGS = [
         Reg('DEVCNT', CHIP_CFG_BASE + 0x000, [
