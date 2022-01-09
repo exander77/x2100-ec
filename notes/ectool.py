@@ -216,6 +216,63 @@ def read_symbol(args):
     did_something = True
 mkaction("--read-symbol", help = 'Read a byte from a symbol.', nargs = 1, metavar = 'SYMBOL', func = read_symbol)
 
+# Commands that go with usbc-bitbang-utils.
+def i2c_probe(args):
+    global patch_syms
+    if not patch_syms:
+        raise ValueError("no ELF loaded?")
+    probeaddr = int(args[0], 16)
+    ec.write8(patch_syms['i2c_addr_dev'], probeaddr)
+    ec.call(patch_syms['i2c_probe'])
+    rv = ec.read8(patch_syms['i2c_rv'])
+    print(f"I2C address 0x{probeaddr:02x}: {'OK' if rv == 0 else 'NG'}")
+    global did_something
+    did_something = True
+mkaction("--i2c-probe", help = 'Probe one I2C address.', nargs = 1, metavar = 'I2C_ADDRESS', func = i2c_probe)
+
+def i2c_scan(args):
+    global patch_syms
+    if not patch_syms:
+        raise ValueError("no ELF loaded?")
+    for addr in range(0,0x100):
+        ec.write8(patch_syms['i2c_addr_dev'], addr)
+        ec.call(patch_syms['i2c_probe'])
+        rv = ec.read8(patch_syms['i2c_rv'])
+        if rv == 0:
+            print(f"found device at I2C address 0x{addr:02x}")
+    global did_something
+    did_something = True
+mkaction("--i2c-scan", help = 'Scan all I2C addresses.', nargs = 0, func = i2c_scan)
+
+def i2c_read(args):
+    global patch_syms
+    if not patch_syms:
+        raise ValueError("no ELF loaded?")
+    devaddr = int(args[0], 16)
+    regaddr = int(args[1], 16)
+    nbytes = int(args[2])
+    if nbytes > 0x10:
+        nbytes = 0x10
+    if nbytes < 1:
+        nbytes = 1
+
+    ec.write8(patch_syms['i2c_addr_dev'], devaddr)
+    ec.write8(patch_syms['i2c_addr_reg'], regaddr)
+    ec.write8(patch_syms['i2c_count'], nbytes)
+    
+    ec.call(patch_syms['i2c_read'])
+    global did_something
+    did_something = True
+
+    rv = ec.read8(patch_syms['i2c_rv'])
+    if rv != 0:
+        print(f"failed to read from I2C device 0x{devaddr:02x} (error 0x{rv:02x})")
+        return
+    rbytes = ec.read(patch_syms['i2c_buf'], nbytes)
+    bytesstr = ' '.join([f"{b:02x}" for b in list(rbytes)])
+    print(f"{devaddr:02X}/{regaddr:02X}[0..{nbytes-1}]: {bytesstr}")
+mkaction("--i2c-read", help = 'Read some bytes from an I2C address.', nargs = 3, metavar = ('DEVADDR', 'REGADDR', 'NBYTES'), func = i2c_read)
+
 args = parser.parse_args()
 
 if not did_something:

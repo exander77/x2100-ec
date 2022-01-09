@@ -2,6 +2,8 @@ class EC:
     def __init__(self):
         self.mem = open("/sys/kernel/debug/ec/ec0/ram", "r+b", 0)
         self.xop = open("/sys/kernel/debug/ec/ec0/xop", "wb", 0)
+        self.lastcall = None
+        self.verified = False
 
     def read(self, addr, nbytes = 1):
         self.mem.seek(addr)
@@ -30,10 +32,13 @@ class EC:
         self.xop.write(bytes([xop]))
     
     def _verify_patchloader(self):
+        if self.verified:
+            return
         for bn,b in enumerate(self.ATOMIC_PATCH_CHECK[1]):
             rd = self.read8(self.ATOMIC_PATCH_CHECK[0] + bn)
             if rd != b:
                 raise RuntimeError(f"atomic patchloader verification failed at address 0x{self.ATOMIC_PATCH_CHECK[0] + bn:x} (read back 0x{rd:02x}, expected 0x{b:02x}) ... is the patchloader loaded?")
+        self.verified = True
     
     def atomicpatch(self, data):
         self._verify_patchloader()
@@ -43,7 +48,9 @@ class EC:
     def call(self, addr):
         self._verify_patchloader()
         addr = addr >> 1
-        self.write(self.JUMP_TARGET_PTR, bytes([addr & 0xFF, (addr >> 8) & 0xFF, (addr >> 16) & 0xFF, (addr >> 24) & 0xFF]))
+        if addr != self.lastcall:
+            self.write(self.JUMP_TARGET_PTR, bytes([addr & 0xFF, (addr >> 8) & 0xFF, (addr >> 16) & 0xFF, (addr >> 24) & 0xFF]))
+            self.lastcall = addr
         self.do_xop(0)
 
 class Reg:
