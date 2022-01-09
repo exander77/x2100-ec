@@ -398,3 +398,26 @@ smbus_id = 2 has no I2C peripherals
 smbus_id = 3 has no I2C peripherals
 
 at some point in this process I confused the EC and locked up the i2c engine...
+
+
+*** I reproduce the same thing using the bitbanging stuff:
+
+joshua@anima:~/x2100/x2100-ec/notes$ sudo ./ectool.py --elf usbc-bitbang-scan.oo --hotpatch --read-symbol last_good_address --call bitbang_scan --read-symbol last_good_address --call bitbang_scan --read-symbol last_good_address --call bitbang_scan --read-symbol last_good_address --call bitbang_scan --read-symbol last_good_address
+ELF load: LOAD: 0x10b12 (2 bytes)
+ELF load: LOAD: 0x2c9a0 (128 bytes)
+ELF load: 40 symbols
+Writing 130 bytes into EC RAM...
+DONE
+last_good_address (0x10b12): 0xfe
+Calling into bitbang_scan (0x2c9a0) on EC...
+DONE
+last_good_address (0x10b12): 0x12
+Calling into bitbang_scan (0x2c9a0) on EC...
+DONE
+last_good_address (0x10b12): 0x50
+Calling into bitbang_scan (0x2c9a0) on EC...
+DONE
+last_good_address (0x10b12): 0x8c
+Calling into bitbang_scan (0x2c9a0) on EC...
+DONE
+last_good_address (0x10b12): 0x12

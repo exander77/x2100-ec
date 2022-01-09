@@ -73,6 +73,7 @@ ec_cmd_81_handle_fc_00:
 	BR ec_cmd_81_ret
 ec_cmd_81_handle_fc_01:
 	MOVD $patchloader_buf@m, (r1, r0)
+	DI
 1:
 	LOADD *0x0(r1, r0), (r3, r2)
 	ADDD $0x4, (r1, r0)
@@ -90,6 +91,7 @@ ec_cmd_81_handle_fc_01:
 	BEQ 1b # outer loop
 	BR 2b
 3:
+	EI
 	BR ec_cmd_81_ret
 
 safetarget:
