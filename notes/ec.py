@@ -161,9 +161,31 @@ class NPCE9MNX(EC):
             Field('PS2_3_SL', 4, 1),
             Field('PS2_1_SL', 5, 1),
             Field('PS2_2_SL', 6, 1)]),
-        Reg("DEVALT5", CHIP_CFG_BASE + 0x015),
-        Reg("DEVALT6", CHIP_CFG_BASE + 0x016),
-        Reg("DEVALT7", CHIP_CFG_BASE + 0x017),
+        Reg("DEVALT5", CHIP_CFG_BASE + 0x015, [
+            Field('A_PWM_SL', 0, 1),
+            Field('B_PWM_SL', 1, 1),
+            Field('C_PWM_SL', 2, 1),
+            Field('D_PWM_SL', 3, 1),
+            Field('E_PWM_SL', 4, 1),
+            Field('F_PWM_SL', 5, 1),
+            Field('G_PWM_SL', 6, 1),
+            Field('H_PWM_SL', 7, 1)]),
+        Reg("DEVALT6", CHIP_CFG_BASE + 0x016, [
+            Field('ADC0_SL', 0, 1),
+            Field('ADC1_SL', 1, 1),
+            Field('ADC2_SL', 2, 1),
+            Field('ADC3_SL', 3, 1),
+            Field('ADC4_SL', 4, 1),
+            Field('ADC5_SL', 5, 1),
+            Field('ADC6_SL', 6, 1),
+            Field('ADC7_SL', 7, 1)]),
+        Reg("DEVALT7", CHIP_CFG_BASE + 0x017, [
+            Field('KBO12_SL', 2, 1),
+            Field('KBO13_SL', 3, 1),
+            Field('KBO14_SL', 4, 1),
+            Field('KBO15_SL', 5, 1),
+            Field('KBO16_SL', 6, 1),
+            Field('KBO17_SL', 7, 1)]),
         Reg("DEVALT8", CHIP_CFG_BASE + 0x018, [
             Field('GA20_SL', 1, 1),
             Field('KBRST_SL', 2, 1),
@@ -184,8 +206,8 @@ class NPCE9MNX(EC):
             Field('CIRRL_SL', 3, 1),
             Field('CIRRM2_SL', 4, 1),
             Field('CIRRM1_SL', 5, 1),
-            Field('SMB3_SL', 6, 1),
-            Field('SMB4_SL', 7, 1)]),
+            Field('SMB3A_SL', 6, 1),
+            Field('SMB4A_SL', 7, 1)]),
         Reg("DEVALTB", CHIP_CFG_BASE + 0x01B),
         Reg("DEVALTC", CHIP_CFG_BASE + 0x01C, [
             Field('ADC8_SL', 0, 1),
@@ -305,11 +327,21 @@ class NPCE9MNX(EC):
     SMB_BASE = 0xFFF500
     SMB_OFS = 0x40
     
+    DAC_BASE = 0xFFF880
+    DAC_REGS = [
+        Reg('CTRL', DAC_BASE + 0),
+        Reg('DAT0', DAC_BASE + 2),
+        Reg('DAT1', DAC_BASE + 4),
+        Reg('DAT2', DAC_BASE + 6),
+        Reg('DAT3', DAC_BASE + 8),
+    ]
+    
     def __init__(self):
         super().__init__()
         
         self.modulelist = [
             ('CHIP_CFG', self.CHIP_CFG_REGS),
+            ('DAC', self.DAC_REGS),
             *[(f"ITIM8_{n}", [reg.module(f"ITIM8_{n}", self.ITIM8_BASE + n * self.ITIM8_OFS) for reg in self.ITIM8_REGS])
               for n in range(self.ITIM8_COUNT)],
             *[(f"GPIO{n:X}", [reg.module(f"GPIO{n:X}", self.GPIO_BASE + n * self.GPIO_OFS) for reg in self.GPIO_REGS])
